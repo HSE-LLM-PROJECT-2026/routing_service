@@ -66,14 +66,19 @@ LOG_LEVEL=INFO
 ```
 
 ## Основные API-ручки
-- `GET /health`
-- `GET /livez`
-- `GET /service-info`
-- `GET /routes`
-- `POST /routes`
-- `GET /routes/{alias}`
-- `PATCH /routes/{alias}/weights`
-- `DELETE /routes/{alias}`
+
+| Метод | Ручка | Кто использует | Назначение |
+|--------|-------|----------------|------------|
+| `GET` | `/health` | Ingress, мониторинг | Проверяет доступность routing service. |
+| `GET` | `/livez` | Kubernetes | Liveness probe контейнера. |
+| `GET` | `/service-info` | Frontend, state facade | Отдает служебную информацию о routing service. |
+| `GET` | `/traffic-routes` | Frontend, inference gateway, state facade | Возвращает список логических маршрутов и текущие веса backend-развертываний. |
+| `POST` | `/traffic-routes` | Frontend | Создает TrafficRoute для двух и более deployment-объектов. |
+| `GET` | `/traffic-routes/{alias}` | Frontend, inference gateway, release controller | Возвращает конкретный маршрут по alias. |
+| `PUT` | `/traffic-routes/{alias}` | Frontend | Полностью обновляет состав backend-развертываний и веса маршрута. |
+| `DELETE` | `/traffic-routes/{alias}` | Frontend | Удаляет логический маршрут и связанный TrafficRoute CRD. |
+| `POST` | `/traffic-routes/{alias}/weights` | Release controller | Меняет только веса маршрута во время канареечного релиза. |
+| `POST` | `/traffic-routes/{alias}/test` | Frontend | Выполняет тестовый запрос через маршрут для проверки распределения трафика. |
 
 ## Сборка и запуск в Docker
 
