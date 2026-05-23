@@ -1,7 +1,5 @@
 # Routing Service
 
-[HSE-LLM-PROJECT-2026/routing_service](https://github.com/HSE-LLM-PROJECT-2026/routing_service)
-
 ## Описание
 
 FastAPI-сервис для управления логическими маршрутами к моделям и весами распределения трафика. Он инкапсулирует работу с TrafficRoute и отделяет маршрутизацию от deployment lifecycle.
