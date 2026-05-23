@@ -2,82 +2,96 @@
 
 ## Описание
 
-FastAPI-сервис для управления логическими маршрутами к моделям и весами распределения трафика. Он инкапсулирует работу с TrafficRoute и отделяет маршрутизацию от deployment lifecycle.
+Этот репозиторий содержит сервис управления логическими маршрутами и весами трафика. Сервис отделяет маршрутизацию от deployment lifecycle и работает с TrafficRoute CRD через Kubernetes client manager.
 
 ## Основные возможности
-
-- создание и просмотр traffic routes
-- обновление backend-развертываний и весов
+- создание traffic route для нескольких backend-развертываний
+- просмотр текущей схемы маршрутизации
+- обновление весов и состава backends
+- отдельная ручка для release controller
 - удаление маршрутов
-- отдельная ручка изменения весов для release controller
 - служебные health/livez/service-info ручки
-
-## Основные API-ручки
-
-- `/traffic-routes`
-- `/traffic-routes/{alias}`
-- `/traffic-routes/{alias}/weights`
 
 ## Структура проекта
 
-- `app/` — код FastAPI-сервиса
-- `app/main.py` — HTTP API и базовая service runtime логика
-- `app/config.py` — настройки сервиса через переменные окружения
-- `deploy/` — файлы для раскатки сервиса
-- `Dockerfile` — сборка контейнера
-- `pyproject.toml`, `uv.lock` — зависимости Python
-- `.env.example` — пример конфигурации
+- `app/` — основной код приложения
+  - `main.py` — FastAPI-приложение и HTTP-ручки
+  - `config.py` — настройки сервиса
+
+- `deploy/` — файлы и переменные для развертывания
+- `.env.example` — пример переменных окружения
+- `Dockerfile` — сборка Docker-образа
+- `pyproject.toml` — зависимости и настройки Python-проекта
+- `requirements.txt` — список зависимостей для совместимого запуска без uv
 
 ## Быстрый старт локально
 
-1. Установить зависимости:
+1. Установите зависимости:
    ```bash
-   uv sync --frozen
+   uv sync
    ```
 
-2. Запустить сервис:
+2. Создайте `.env` на основе `.env.example`:
    ```bash
-   uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+   cp .env.example .env
    ```
 
-3. Проверить, что сервис живой:
+3. Запустите сервис:
    ```bash
-   curl http://localhost:8000/health
+   uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
    ```
+
+Если `uv` не используется, можно запустить через обычный virtualenv:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
 
 ## Переменные окружения
+- `DATABASE_URL`
+- `K8S_CLIENT_MANAGER_URL`
+- `SECURITY_SERVICE_URL`
+- `SERVICE_TOKEN`
+- `LOG_LEVEL`
 
-- `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` — подключение к PostgreSQL
-- `K8S_NAMESPACE` — namespace платформы в Kubernetes
-- `SECURITY_AUDIT_BASE_URL` — адрес security/audit service
-- `SECURITY_AUDIT_SERVICE_TOKEN` — service-to-service токен
-- `STATUS_PROMETHEUS_BASE_URL` — адрес Prometheus для сервисов, которым нужны метрики
-- `IMAGE_REPOSITORY`, `IMAGE_TAG`, `RELEASE_NAME`, `KUBECONFIG_PATH` — параметры deploy-скриптов
+Пример `.env`:
 
-Полный пример лежит в `.env.example`.
-
-## Docker
-
-```bash
-docker build -t awesomecosmonaut/routing_service:latest .
-docker run --env-file .env -p 8000:8000 awesomecosmonaut/routing_service:latest
+```env
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/llm_platform
+SERVICE_TOKEN=change-me
+LOG_LEVEL=INFO
 ```
 
-## Деплой
+## Основные API-ручки
+- `GET /health`
+- `GET /livez`
+- `GET /service-info`
+- `GET /routes`
+- `POST /routes`
+- `GET /routes/{alias}`
+- `PATCH /routes/{alias}/weights`
+- `DELETE /routes/{alias}`
 
-Файлы для раскатки лежат в `deploy/`.
+## Сборка и запуск в Docker
 
 ```bash
-cd deploy
-./deploy-from-scratch.sh
+docker build -t hse-llm-project-2026/routing_service:local .
+docker run --env-file .env -p 8000:8000 hse-llm-project-2026/routing_service:local
 ```
 
-Если нужно пересобрать образ и полностью переустановить сервис:
+## Деплой в Kubernetes
 
-```bash
-cd deploy
-./rebuild-delete-deploy.sh
-```
+Файлы развертывания лежат в папке `deploy/`. Для сервисов, которые уже подключены к стенду, используются Helm values и deploy-скрипты из соответствующего репозитория или общего инфраструктурного пайплайна.
+
+## Метрики и документация
+
+- Swagger UI: `/docs`
+- OpenAPI: `/openapi.json`
+- Health check: `/health`
+- Liveness check: `/livez`
 
 ## Автор
 
