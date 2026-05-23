@@ -67,18 +67,18 @@ LOG_LEVEL=INFO
 
 ## Основные API-ручки
 
-| Метод | Ручка | Кто использует | Назначение |
-|--------|-------|----------------|------------|
-| `GET` | `/health` | Ingress, мониторинг | Проверяет доступность routing service. |
-| `GET` | `/livez` | Kubernetes | Liveness probe контейнера. |
-| `GET` | `/service-info` | Frontend, state facade | Отдает служебную информацию о routing service. |
-| `GET` | `/traffic-routes` | Frontend, inference gateway, state facade | Возвращает список логических маршрутов и текущие веса backend-развертываний. |
-| `POST` | `/traffic-routes` | Frontend | Создает TrafficRoute для двух и более deployment-объектов. |
-| `GET` | `/traffic-routes/{alias}` | Frontend, inference gateway, release controller | Возвращает конкретный маршрут по alias. |
-| `PUT` | `/traffic-routes/{alias}` | Frontend | Полностью обновляет состав backend-развертываний и веса маршрута. |
-| `DELETE` | `/traffic-routes/{alias}` | Frontend | Удаляет логический маршрут и связанный TrafficRoute CRD. |
-| `POST` | `/traffic-routes/{alias}/weights` | Release controller | Меняет только веса маршрута во время канареечного релиза. |
-| `POST` | `/traffic-routes/{alias}/test` | Frontend | Выполняет тестовый запрос через маршрут для проверки распределения трафика. |
+| Метод | Ручка | Назначение |
+|--------|-------|------------|
+| `GET` | `/health` | Проверяет доступность routing service. |
+| `GET` | `/livez` | Liveness probe контейнера. |
+| `GET` | `/service-info` | Отдает служебную информацию о routing service. |
+| `GET` | `/traffic-routes` | Возвращает список логических маршрутов и текущие веса backend-развертываний. |
+| `POST` | `/traffic-routes` | Создает TrafficRoute для двух и более deployment-объектов. |
+| `GET` | `/traffic-routes/{alias}` | Возвращает конкретный маршрут по alias. |
+| `PUT` | `/traffic-routes/{alias}` | Полностью обновляет состав backend-развертываний и веса маршрута. |
+| `DELETE` | `/traffic-routes/{alias}` | Удаляет логический маршрут и связанный TrafficRoute CRD. |
+| `POST` | `/traffic-routes/{alias}/weights` | Меняет только веса маршрута во время канареечного релиза. |
+| `POST` | `/traffic-routes/{alias}/test` | Выполняет тестовый запрос через маршрут для проверки распределения трафика. |
 
 ## Сборка и запуск в Docker
 
