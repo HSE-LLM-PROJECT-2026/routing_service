@@ -1,55 +1,86 @@
 # Routing Service
 
+[HSE-LLM-PROJECT-2026/routing_service](https://github.com/HSE-LLM-PROJECT-2026/routing_service)
+
 ## Описание
 
-Сервис маршрутизации трафика между deployment-бэкендами и управления весами маршрутов.
+FastAPI-сервис для управления логическими маршрутами к моделям и весами распределения трафика. Он инкапсулирует работу с TrafficRoute и отделяет маршрутизацию от deployment lifecycle.
 
 ## Основные возможности
 
-- создание и изменение TrafficRoute
+- создание и просмотр traffic routes
+- обновление backend-развертываний и весов
 - удаление маршрутов
-- изменение весов и тест маршрута
+- отдельная ручка изменения весов для release controller
+- служебные health/livez/service-info ручки
+
+## Основные API-ручки
+
+- `/traffic-routes`
+- `/traffic-routes/{alias}`
+- `/traffic-routes/{alias}/weights`
 
 ## Структура проекта
 
-- `app/` - код сервиса (FastAPI, config, domain handlers)
-- `deploy/` - служебные файлы для роли сервиса в деплое
-- `pyproject.toml` - зависимости и метаданные проекта
-- `Dockerfile` - сборка контейнера
-- `.env.example` - пример переменных окружения
+- `app/` — код FastAPI-сервиса
+- `app/main.py` — HTTP API и базовая service runtime логика
+- `app/config.py` — настройки сервиса через переменные окружения
+- `deploy/` — файлы для раскатки сервиса
+- `Dockerfile` — сборка контейнера
+- `pyproject.toml`, `uv.lock` — зависимости Python
+- `.env.example` — пример конфигурации
 
-## Быстрый старт (локально)
+## Быстрый старт локально
 
 1. Установить зависимости:
-   `uv sync --frozen --extra dev`
+   ```bash
+   uv sync --frozen
+   ```
+
 2. Запустить сервис:
-   `uv run uvicorn app.main:app --host 0.0.0.0 --port 8000`
-3. Проверить health:
-   `curl http://127.0.0.1:8000/health`
+   ```bash
+   uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+   ```
+
+3. Проверить, что сервис живой:
+   ```bash
+   curl http://localhost:8000/health
+   ```
 
 ## Переменные окружения
 
-- `SERVICE_ROLE` - роль сервиса в control plane
-- `SERVICE_NAME` - техническое имя сервиса
-- `POSTGRES_DSN` - строка подключения к PostgreSQL
-- `PROMETHEUS_BASE_URL` - адрес Prometheus
-- `SERVICE_TO_SERVICE_URLS_JSON` - карта внутренних URL сервисов
+- `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` — подключение к PostgreSQL
+- `K8S_NAMESPACE` — namespace платформы в Kubernetes
+- `SECURITY_AUDIT_BASE_URL` — адрес security/audit service
+- `SECURITY_AUDIT_SERVICE_TOKEN` — service-to-service токен
+- `STATUS_PROMETHEUS_BASE_URL` — адрес Prometheus для сервисов, которым нужны метрики
+- `IMAGE_REPOSITORY`, `IMAGE_TAG`, `RELEASE_NAME`, `KUBECONFIG_PATH` — параметры deploy-скриптов
+
+Полный пример лежит в `.env.example`.
 
 ## Docker
 
-- Сборка: `docker build -t routing_service:local .`
-- Запуск: `docker run --rm -p 8000:8000 --env-file .env routing_service:local`
+```bash
+docker build -t awesomecosmonaut/routing_service:latest .
+docker run --env-file .env -p 8000:8000 awesomecosmonaut/routing_service:latest
+```
 
 ## Деплой
 
-Файлы для деплоя лежат в `deploy/`.
+Файлы для раскатки лежат в `deploy/`.
 
-## Основные API ручки
+```bash
+cd deploy
+./deploy-from-scratch.sh
+```
 
-- `GET /traffic-routes`
-- `POST /traffic-routes`
-- `GET /traffic-routes/{alias}`
-- `PUT /traffic-routes/{alias}`
-- `DELETE /traffic-routes/{alias}`
-- `POST /traffic-routes/{alias}/weights`
-- `POST /traffic-routes/{alias}/test`
+Если нужно пересобрать образ и полностью переустановить сервис:
+
+```bash
+cd deploy
+./rebuild-delete-deploy.sh
+```
+
+## Автор
+
+Igor Malysh
